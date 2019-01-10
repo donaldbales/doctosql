@@ -12,7 +12,7 @@ import * as sql from './lib/sqlMetadata';
 const moduleName: string = 'src/index.js';
 
 export async function load(application: string, docs: any[]): Promise<any> {
-  const methodName: string = `full`;
+  const methodName: string = `load`;
   const log: any = Logger.instance.log;
   const logLevel: string = (process.env.DOCTOSQL_LOG_LEVEL as string) || (process.env.LOG_LEVEL as string);
   if (logLevel) {

@@ -18,7 +18,7 @@ const sql = require("./lib/sqlMetadata");
 const moduleName = 'src/index.js';
 function load(application, docs) {
     return __awaiter(this, void 0, void 0, function* () {
-        const methodName = `full`;
+        const methodName = `load`;
         const log = Logger.instance.log;
         const logLevel = process.env.DOCTOSQL_LOG_LEVEL || process.env.LOG_LEVEL;
         if (logLevel) {
