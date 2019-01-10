@@ -1,0 +1,30 @@
+{
+  "name": "doctosql",
+  "version": "0.0.1",
+  "description": "Javascript Document to Relational Database Integration",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Donald J. Bales",
+  "license": "ISC",
+  "dependencies": {
+    "@types/bunyan": "^1.8.5",
+    "@types/bunyan-blackhole": "^0.2.2",
+    "@types/lodash": "^4.14.119",
+    "@types/node": "^8.10.39",
+    "@types/tedious": "^1.8.33",
+    "@types/tedious-connection-pool": "^1.0.1",
+    "bunyan": "^1.8.12",
+    "bunyan-blackhole": "^1.1.1",
+    "change-case": "^3.0.2",
+    "lodash": "^4.17.11",
+    "moment": "^2.23.0",
+    "node": "^8.15.0",
+    "string.prototype.padend": "^3.0.0",
+    "tedious": "^3.0.1",
+    "tedious-connection-pool": "^1.0.5",
+    "tslint": "^5.11.0",
+    "typescript": "^2.9.2"
+  }
+}
