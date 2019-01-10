@@ -6,8 +6,17 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/donaldbales/doctosql.git"
+  },
+  "keywords": [
+    "document",
+    "rdbms",
+    "sql"
+  ],
   "author": "Donald J. Bales",
-  "license": "ISC",
+  "license": "Apache-2.0",
   "dependencies": {
     "@types/bunyan": "^1.8.5",
     "@types/bunyan-blackhole": "^0.2.2",
