@@ -570,7 +570,14 @@ export async function mergeDocs(tables: any, docs: any[], evented: boolean = fal
   for (let i = 0; i < docs.length; i++) {
     const doc: any = docs[i];
     const eye: number = i;
-    log.trace({ moduleName, methodName, doc: doc._id.slice(0, 13), i: eye }, `loop`);
+    let slc: string = '';
+    if (doc._id)  {
+      slc = doc._id.slice(0, 13);
+    } else
+    if (doc.id)  {
+      slc = doc.id.slice(0, 13);
+    } 
+    log.trace({ moduleName, methodName, doc: slc, i: eye }, `loop`);
 
     result = await mergeDoc(tables, doc, evented);
 
