@@ -75,7 +75,7 @@ export function alterTableScript(conn: any, tables: any, table: any): Promise<an
       const action: string = tokens[4];
       if (action === 'add') {
         sql += `alter table ${tableName} \n`;
-        sql += `add ${columnName}`;
+        sql += `add ${columnName}  `;
         if (columnName.indexOf(`ID `) === 0 ||
             columnName.indexOf(`${arrayIndex} `) === 0) {
           sql += `${sqlDataType}  NOT NULL;\n`;
@@ -85,7 +85,7 @@ export function alterTableScript(conn: any, tables: any, table: any): Promise<an
       } else
       if (action === 'alter') {
         sql += `alter table ${tableName} \n`;
-        sql += `alter column ${columnName}`;
+        sql += `alter column ${columnName}  `;
         if (columnName.indexOf(`ID `) === 0 ||
             columnName.indexOf(`${arrayIndex} `) === 0) {
           sql += `${sqlDataType}  NOT NULL;\n`;

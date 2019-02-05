@@ -40,3 +40,5 @@ doctosql.load(tablePrefix, docs);
 // To insert, or update, skipping those with same revision
 doctosql.incr(tablePrefix, docs);
 ```
+
+NOTE: Each document must have an id or _id, and a rev or _rev attributes.
