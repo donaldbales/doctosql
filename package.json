@@ -1,6 +1,6 @@
 {
   "name": "doctosql",
-  "version": "0.0.8",
+  "version": "0.0.9",
   "description": "Javascript Document to Relational Database Integration",
   "main": "index.js",
   "scripts": {

@@ -58,7 +58,7 @@ function checkForRevisions(conn, tables, table) {
       select ID,
              REV
       from   ${tableName}
-      order by id
+      order by ID
       `;
         const sqlRequest = new tds.Request(sqlStatement, (sqlerr, rowCount) => {
             if (sqlerr) {

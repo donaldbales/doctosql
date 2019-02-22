@@ -55,7 +55,7 @@ function checkForRevisions(conn: any, tables: any, table: string): Promise<any> 
       select ID,
              REV
       from   ${tableName}
-      order by id
+      order by ID
       `;
     const sqlRequest = new tds.Request(
       sqlStatement,
