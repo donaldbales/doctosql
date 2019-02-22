@@ -52,8 +52,8 @@ function checkForRevisions(conn: any, tables: any, table: string): Promise<any> 
     log.trace({ moduleName, methodName, table }, 'start');
     const tableName: any = createTableName(tables, table);
     const sqlStatement: string = `
-      select id,
-             rev
+      select ID,
+             REV
       from   ${tableName}
       order by id
       `;

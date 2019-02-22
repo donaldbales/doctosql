@@ -55,8 +55,8 @@ function checkForRevisions(conn, tables, table) {
         log.trace({ moduleName, methodName, table }, 'start');
         const tableName = sqlDDL_1.createTableName(tables, table);
         const sqlStatement = `
-      select id,
-             rev
+      select ID,
+             REV
       from   ${tableName}
       order by id
       `;
