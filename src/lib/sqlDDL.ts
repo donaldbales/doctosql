@@ -5,6 +5,7 @@
 import Logger from 'bunyan';
 import * as fs from 'fs';
 import * as moment from 'moment';
+import * as path from 'path';
 import * as padEnd from 'string.prototype.padend';
 import * as tds from 'tedious';
 
@@ -102,7 +103,14 @@ export function alterTableScript(conn: any, tables: any, table: any): Promise<an
     */
 
     if (sql) {
-      fs.writeFileSync(`./db/${tableName.toLowerCase()}.${moment().format('YYYYMMDDHHmmss')}.alt`, sql);
+      try {
+        const filename: string = `.${path.sep}db${path.sep}` +
+          `${tableName.toLowerCase()}.${moment().format('YYYYMMDDHHmmss')}.alt`;
+        fs.writeFileSync(filename, sql);
+      } catch (err) {
+        const error: any = inspect(err);
+        log.error({ moduleName, methodName, sql, error });
+      }
     }
     return resolve({ conn, tables, table, sql });
   });
@@ -385,7 +393,14 @@ export function createTableScript(conn: any, tables: any, table: any): Promise<a
     sql += createRevisionKeyScript(tables, table);
 
     if (sql) {
-      fs.writeFileSync(`./db/${tableName.toLowerCase()}.${moment().format('YYYYMMDDHHmmss')}.tab`, sql);
+      try {
+        const filename: string = `.${path.sep}db${path.sep}` +
+          `${tableName.toLowerCase()}.${moment().format('YYYYMMDDHHmmss')}.tab`;
+        fs.writeFileSync(filename, sql);
+      } catch (err) {
+        const error: any = inspect(err);
+        log.error({ moduleName, methodName, sql, error });
+      }
     }
     return resolve({ conn, tables, table, sql });
   });
