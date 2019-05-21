@@ -19,6 +19,7 @@ const arrayIndex: string = 'AI';
 const delimiter: string = `\t`;
 const nameLimit: number = 128;
 const moduleName: string = 'src/lib/sqlDDL.js';
+const tmpdir: string = (process.env.TMPDIR as string) || `.${path.sep}db`;
 
 let log: Logger;
 
@@ -104,7 +105,7 @@ export function alterTableScript(conn: any, tables: any, table: any): Promise<an
 
     if (sql) {
       try {
-        const filename: string = `.${path.sep}db${path.sep}` +
+        const filename: string = `${tmpdir}${path.sep}` +
           `${tableName.toLowerCase()}.${moment().format('YYYYMMDDHHmmss')}.alt`;
         fs.writeFileSync(filename, sql);
       } catch (err) {
@@ -394,7 +395,7 @@ export function createTableScript(conn: any, tables: any, table: any): Promise<a
 
     if (sql) {
       try {
-        const filename: string = `.${path.sep}db${path.sep}` +
+        const filename: string = `${tmpdir}${path.sep}` +
           `${tableName.toLowerCase()}.${moment().format('YYYYMMDDHHmmss')}.tab`;
         fs.writeFileSync(filename, sql);
       } catch (err) {
