@@ -143,6 +143,7 @@ function connect(tables: any, table: any): Promise<any> {
 function checkForColumn(conn: any, tables: any, table: string, columnName: string): Promise<any> {
   return new Promise((resolve, reject) => {
     const methodName: string = 'checkForColumn';
+    const results: any[] = [];
     log.trace({ moduleName, methodName, table, columnName }, 'start');
     const sqlStatement: string = `
       select data_type,
@@ -163,30 +164,13 @@ function checkForColumn(conn: any, tables: any, table: string, columnName: strin
           return reject(sqlerr);
         } else {
           log.info({ moduleName, methodName, table, columnName }, `${rowCount} rows`);
+          results.push({ occurs: rowCount });
+          return resolve({ conn, tables, table, results });
         }
       }
     );
 
     log.trace({ moduleName, methodName, table, tableName, columnName, sqlStatement });
-
-    let result: any;
-    const results: any[] = [];
-
-    sqlRequest.on('fields', (columns: any) => {
-      const sqlDataType: any = columns[0].value;
-      const sqlMaxLength: any = columns[1].value;
-      result = {
-        sqlDataType,
-        sqlMaxLength
-      };
-      log.trace({ moduleName, methodName, table, columnName, sqlDataType, sqlMaxLength }, `row`);
-      results.push(result);
-    });
-
-    sqlRequest.on('result', (rowCount: any, more: any, rows: any) => {
-      log.trace({ moduleName, methodName, table, rowCount }, `requestCompleted`);
-      return resolve({ conn, tables, table, results });
-    });
   });
 }
 
