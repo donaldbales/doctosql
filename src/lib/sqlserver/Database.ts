@@ -2,7 +2,7 @@ import { ConnectionConfig } from 'tedious';
 import * as ConnectionPool from 'tedious-connection-pool';
 import { PooledConnection } from 'tedious-connection-pool';
 
-import { instance as logger } from './Logger';
+import { instance as logger } from '../Logger';
 
 const log = logger.log;
 
