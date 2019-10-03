@@ -270,30 +270,13 @@ function checkForTable(conn: any, tables: any, table: string): Promise<any> {
           return reject(sqlerr);
         } else {
           log.info({ moduleName, methodName, table, tableName }, `${rowCount[0].occurs} rows`);
+          results.push({ occurs: rowCount[0].occurs });
+          return resolve({ conn, tables, table, results });
         }
       }
     );
 
     log.trace({ moduleName, methodName, table, sqlStatement });
-
-    sqlRequest.on('error', (err: any) => {
-      log.error({ moduleName, methodName, table, tableName, err });
-      return reject(err);
-    });
-
-    sqlRequest.on('end', () => {
-      log.trace({ moduleName, methodName, table, tableName }, 'Hit end!');
-    });
-
-    sqlRequest.on('fields', (columns: any) => {
-      log.trace({ moduleName, methodName, table }, `row`);
-      results.push({ occurs: columns[0].value });
-    });
-
-    sqlRequest.on('result', (rowCount: any, more: any, rows: any) => {
-      log.trace({ moduleName, methodName, table, rowCount }, `requestCompleted`);
-      return resolve({ conn, tables, table, results });
-    });
   });
 }
 
