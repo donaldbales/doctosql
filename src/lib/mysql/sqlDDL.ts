@@ -1,9 +1,10 @@
-// sqlServer
+// mysql
 
 /* tslint:disable:no-console */
 
 import Logger from 'bunyan';
 import * as fs from 'fs';
+import * as _ from 'lodash';
 import * as moment from 'moment';
 import * as path from 'path';
 
@@ -42,11 +43,11 @@ export function alterTables(tables: any): Promise<any> {
         return alterTableScript(result.conn, result.tables, result.table);
       }).then((result) => {
         log.trace({ moduleName, methodName, table }, 'Step 3');
-        return executeDDL(result.conn, result.tables, result.table, result.sql);
+        return executeDDL(result.conn, result.tables, result.table, result.sqlStatements);
       }).then((result) => {
         log.trace({ moduleName, methodName, table }, 'Step 4');
         results += `${inspect(result.results)}\n`;
-        result.conn.close();
+        result.conn.destroy();
         if (++count === tableKeys.length) {
           resolve(results);
         }
@@ -65,9 +66,10 @@ export function alterTableScript(conn: any, tables: any, table: any): Promise<an
     const methodName: string = 'alterTableScript';
     log.trace({ moduleName, methodName, table }, `start`);
     const tableName: any = createTableName(tables, table);
-    let sql: string = '';
+    const sqlStatements: string[] = []
     const columns: any[] = tables[table].columns;
     for (const column of columns) {
+      let sql: string = '';
       const tokens = column.split(delimiter);
       const columnName: string = tokens[0];
       const sqlDataType: string = tokens[1];
@@ -84,13 +86,16 @@ export function alterTableScript(conn: any, tables: any, table: any): Promise<an
       } else
       if (action === 'alter') {
         sql += `alter table ${tableName} \n`;
-        sql += `alter column ${columnName}  `;
+        sql += `modify ${columnName}  `;
         if (columnName.indexOf(`ID `) === 0 ||
             columnName.indexOf(`${arrayIndex} `) === 0) {
           sql += `${sqlDataType}  NOT NULL;\n`;
         } else {
           sql += `${sqlDataType.trim()};\n`;
         }
+      }
+      if (sql.trim().length > 0) {
+        sqlStatements.push(sql);
       }
     }
     /* should we try to recover from a change in structure?
@@ -100,17 +105,19 @@ export function alterTableScript(conn: any, tables: any, table: any): Promise<an
     }
     */
 
-    if (sql) {
+    if (sqlStatements.length > 0) {
       try {
         const filename: string = `${tmpdir}${path.sep}` +
           `${tableName.toLowerCase()}.${moment().format('YYYYMMDDHHmmss')}.alt`;
-        fs.writeFileSync(filename, sql);
+        for (const sql of sqlStatements) {
+          fs.appendFileSync(filename, sql);
+        }
       } catch (err) {
         const error: any = inspect(err);
-        log.error({ moduleName, methodName, sql, error });
+        log.error({ moduleName, methodName, sqlStatements, error });
       }
     }
-    return resolve({ conn, tables, table, sql });
+    return resolve({ conn, tables, table, sqlStatements });
   });
 }
 
@@ -147,7 +154,7 @@ function checkForColumn(conn: any, tables: any, table: string, columnName: strin
     log.trace({ moduleName, methodName, table, columnName }, 'start');
     const sqlStatement: string = `
       select data_type,
-             case when character_maximum_length = -1 then 2147483647 else character_maximum_length end
+             case when character_maximum_length = -1 then 2147483647 else character_maximum_length end as COLUMN_LENGTH
       from   INFORMATION_SCHEMA.COLUMNS
       where  table_name = ?
       and    column_name = ?
@@ -163,8 +170,11 @@ function checkForColumn(conn: any, tables: any, table: string, columnName: strin
           log.error({ moduleName, methodName, table, columnName, sqlerr });
           return reject(sqlerr);
         } else {
-          log.info({ moduleName, methodName, table, columnName }, `${rowCount} rows`);
-          results.push({ occurs: rowCount });
+          log.info({ moduleName, methodName, table, columnName }, `${rowCount.length} rows`);
+          results.push({
+            sqlDataType: rowCount[0].DATA_TYPE.toUpperCase(),
+            sqlMaxLength: rowCount[0].COLUMN_LENGTH
+          })
           return resolve({ conn, tables, table, results });
         }
       }
@@ -280,7 +290,7 @@ function createPrimaryKeyScript(tables: any, table: any): string {
       sql += `${tokens[0].trim()},\n`;
     }
   }
-  sql += `${tables[table].tablePk} );\n\n`;
+  sql += `${tables[table].tablePk} );`;
 
   return sql;
 }
@@ -308,7 +318,7 @@ function createRevisionKeyScript(tables: any, table: any): string {
     sql += `constraint  ${tableName}_UK\n`;
     sql += `unique (\n`;
     sql += `ID,\n`;
-    sql += `REV );\n\n`;
+    sql += `REV );`;
   }
 
   return sql;
@@ -333,38 +343,45 @@ export function createTableScript(conn: any, tables: any, table: any): Promise<a
     const methodName: string = 'createTableScript';
     log.trace({ moduleName, methodName, table }, `start`);
     const tableName: any = createTableName(tables, table);
-    let sql: string = `create table ${tableName} (\n`;
+
+    const sqlStatements: string[] = []
+    let ddl: string = `create table ${tableName} (\n`;
     for (const column of tables[table].columns) {
       const tokens = column.split(delimiter);
-      sql += `${tokens[0]}  `;
+      ddl += `${tokens[0]}  `;
       if (tokens[0].indexOf(`ID `) === 0 ||
           tokens[0].indexOf(`${arrayIndex} `) === 0) {
-        sql += `${tokens[1]}  NOT NULL,\n`;
+        ddl += `${tokens[1]}  NOT NULL,\n`;
       } else {
-        sql += `${tokens[1].trim()},\n`;
+        ddl += `${tokens[1].trim()},\n`;
       }
     }
     for (const column of tables[table].fkColumns) {
       const tokens = column.split(delimiter);
-      sql += `${tokens[0]}  ${tokens[1]}  NOT NULL,\n`;
+      ddl += `${tokens[0]}  ${tokens[1]}  NOT NULL,\n`;
     }
-    sql = sql.slice(0, sql.length - 2);
-    sql += ');\n\n';
+    ddl = ddl.slice(0, ddl.length - 2);
+    if (ddl && ddl.trim() !== '') {
+      ddl += ');';
+      sqlStatements.push(ddl);
+    }
 
-    sql += createPrimaryKeyScript(tables, table);
-    sql += createRevisionKeyScript(tables, table);
+    sqlStatements.push(createPrimaryKeyScript(tables, table));
+    sqlStatements.push(createRevisionKeyScript(tables, table));
 
-    if (sql) {
+    if (sqlStatements.length > 0) {
       try {
         const filename: string = `${tmpdir}${path.sep}` +
           `${tableName.toLowerCase()}.${moment().format('YYYYMMDDHHmmss')}.tab`;
-        fs.writeFileSync(filename, sql);
+        for (const sqlStatement of sqlStatements) {
+          fs.appendFileSync(filename, sqlStatement);
+        }
       } catch (err) {
         const error: any = inspect(err);
-        log.error({ moduleName, methodName, sql, error });
+        log.error({ moduleName, methodName, sqlStatements, error });
       }
     }
-    return resolve({ conn, tables, table, sql });
+    return resolve({ conn, tables, table, sqlStatements });
   });
 }
 
@@ -391,15 +408,15 @@ export function createTables(tables: any): Promise<any> {
         if (result.results[0].occurs === 0) {
           return createTableScript(result.conn, result.tables, result.table);
         } else {
-          return { conn: result.conn, tables: result.tables, table: result.table, sql: '' };
+          return { conn: result.conn, tables: result.tables, table: result.table, sqlStatements: [] };
         }
       }).then((result) => {
         log.trace({ moduleName, methodName, table, results: result.sql }, 'Step 3');
-        return executeDDL(result.conn, result.tables, result.table, result.sql);
+        return executeDDL(result.conn, result.tables, result.table, result.sqlStatements);
       }).then((result) => {
         log.trace({ moduleName, methodName, table, results: result.results }, 'Step 4');
         results += `${inspect(result.results)}\n`;
-        result.conn.close();
+        result.conn.destroy();
         if (++count === tableKeys.length) {
           resolve(results);
         }
@@ -413,36 +430,30 @@ export function createTables(tables: any): Promise<any> {
   });
 }
 
-function executeDDL(conn: any, tables: any, table: any, sql: string): Promise<any> {
+function executeDDL(conn: any, tables: any, table: any, sqlStatements: string): Promise<any> {
   return new Promise((resolve, reject) => {
     const methodName: string = 'executeDDL';
-    log.trace({ moduleName, methodName, table, sql }, `start`);
+    log.trace({ moduleName, methodName, table, sqlStatements }, `start`);
 
     const results: any[] = [];
-    if (sql) {
-      const sqlRequest = conn.query(
-        sql,
-        (sqlerr: any, rowCount: any) => {
-          if (sqlerr) {
-            log.error({ moduleName, methodName, table, sql, sqlerr});
-            return reject(sqlerr);
-          } else {
-            log.info({ moduleName, methodName, table, sql }, `${rowCount} rows`);
+    if (sqlStatements.length > 0) {
+      for (const sql of sqlStatements) {
+        log.trace({ moduleName, methodName, table, sql});
+        const sqlRequest = conn.query(
+          sql,
+          (sqlerr: any, rowCount: any) => {
+            if (sqlerr) {
+              log.error({ moduleName, methodName, table, sql, sqlerr});
+              return reject(sqlerr);
+            } else {
+              log.info({ moduleName, methodName, table, sql }, `${rowCount.changedRows} rows`);
+              // Follow up: This may need to be rowCount.affectedRows:
+              results.push({ value: rowCount.changedRows });
+              return resolve({ conn, tables, table, results });
+            }
           }
-        }
-      );
-
-      log.trace({ moduleName, methodName, table, sql});
-
-      sqlRequest.on('fields', (columns: any) => {
-        log.trace({ moduleName, methodName, table, columns }, `row`);
-        results.push({ value: columns[0].value });
-      });
-
-      sqlRequest.on('result', (rowCount: any, more: any, rows: any) => {
-        log.trace({ moduleName, methodName, table, results }, `requestCompleted`);
-        return resolve({ conn, tables, table, results });
-      });
+        );
+      }
     } else {
       resolve({ conn, tables, table, results });
     }

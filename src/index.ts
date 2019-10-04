@@ -36,7 +36,7 @@ export async function load(entityName: string, docs: any[]): Promise<any> {
 
   const merges = await dml.mergeDocs(DB_TYPE, tables, docs);
 
-  log.info({ moduleName, methodName }, `Fininshed at ${new Date().toISOString()}.`);
+  log.info({ moduleName, methodName }, `Finished at ${new Date().toISOString()}.`);
 
   return { result: true };
 }
@@ -67,7 +67,7 @@ export async function incr(entityName: string, docs: any[]): Promise<any> {
 
   const merges = await dml.mergeDocs(DB_TYPE, tables, docs);
 
-  log.info({ moduleName, methodName }, `Fininshed at ${new Date().toISOString()}.`);
+  log.info({ moduleName, methodName }, `Finished at ${new Date().toISOString()}.`);
 
   return { result: true };
 }

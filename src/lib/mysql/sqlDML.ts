@@ -1,4 +1,4 @@
-// sqlServer
+// mysql
 
 /* tslint:disable:no-console */
 import Logger from 'bunyan';
@@ -45,6 +45,7 @@ export async function initializeRevisions(tables: any): Promise<any> {
 }
 
 function checkForRevisions(conn: any, tables: any, table: string): Promise<any> {
+  // Note: This is never called in the MySQL case....
   return new Promise((resolve, reject) => {
     const methodName: string = 'checkForRevisions';
     log.trace({ moduleName, methodName, table }, 'start');
@@ -56,6 +57,8 @@ function checkForRevisions(conn: any, tables: any, table: string): Promise<any> 
       order by ID
       `;
 
+    log.trace({ moduleName, methodName, table, tableName, sqlStatement });
+    const results: any[] = [];
     const sqlRequest = conn.query(
       sqlStatement,
       (sqlerr: any, rowCount: any) => {
@@ -63,30 +66,17 @@ function checkForRevisions(conn: any, tables: any, table: string): Promise<any> 
           log.error({ moduleName, methodName, table, sqlerr });
           return reject(sqlerr);
         } else {
-          log.info({ moduleName, methodName, table }, `${rowCount} rows`);
+          log.info({ moduleName, methodName, table }, `${rowCount.length} rows`);
+          for (const row of rowCount) {
+            results.push({
+              id: row.ID,
+              rev: row.REV
+            });
+          }
+          return resolve({ conn, tables, table, results });
         }
       }
     );
-
-    log.trace({ moduleName, methodName, table, tableName, sqlStatement });
-
-    let result: any;
-    const results: any[] = [];
-
-    sqlRequest.on('fields', (columns: any) => {
-      const id: any = columns[0].value;
-      const rev: any = columns[1].value;
-      result = [
-        id,
-        rev
-      ];
-      results.push(result);
-    });
-
-    sqlRequest.on('result', (rowCount: any, more: any, rows: any) => {
-      log.debug({ moduleName, methodName, table, rowCount }, `requestCompleted`);
-      return resolve({ conn, tables, table, results });
-    });
   });
 }
 
@@ -344,7 +334,6 @@ function mergeRow(
 
     log.trace({ moduleName, methodName, table, sqlStatement, sqlStatementLength: sqlStatement.length });
 
-    let result: any;
     const results: any[] = [];
 
     // Here we specify value parameters twice, in the same order, in our SQL update statement...
@@ -361,21 +350,12 @@ function mergeRow(
           }
           return reject({ sqlerr, table, doc, parentJsonKey });
         } else {
-          log.info({ moduleName, methodName, table, id, parentJsonKey }, `${rowCount} rows`);
+          log.info({ moduleName, methodName, table, id, parentJsonKey }, `${rowCount.affectedRows} rows`);
+          results.push({ occurs: rowCount.affectedRows });
+          return resolve({ conn, tables, table, doc, parentJsonKey });
         }
       }
     );
-
-    sqlRequest.on('fields', (columns: any) => {
-      log.trace({ moduleName, methodName, table, columns }, `row`);
-      result = { occurs: columns[0].value };
-      results.push(result);
-    });
-
-    sqlRequest.on('result', (rowCount: any, more: any, rows: any) => {
-      log.trace({ moduleName, methodName, table, rowCount }, `requestCompleted`);
-      return resolve({ conn, tables, table, doc, parentJsonKey });
-    });
   });
 }
 
