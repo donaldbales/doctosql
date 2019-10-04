@@ -428,21 +428,13 @@ function executeDDL(conn: any, tables: any, table: any, sql: string): Promise<an
             return reject(sqlerr);
           } else {
             log.info({ moduleName, methodName, table, sql }, `${rowCount} rows`);
+            results.push({ occurs: rowCount });
+            return resolve({ conn, tables, table, results });
           }
         }
       );
 
       log.trace({ moduleName, methodName, table, sql});
-
-      sqlRequest.on('fields', (columns: any) => {
-        log.trace({ moduleName, methodName, table, columns }, `row`);
-        results.push({ value: columns[0].value });
-      });
-
-      sqlRequest.on('result', (rowCount: any, more: any, rows: any) => {
-        log.trace({ moduleName, methodName, table, results }, `requestCompleted`);
-        return resolve({ conn, tables, table, results });
-      });
     } else {
       resolve({ conn, tables, table, results });
     }

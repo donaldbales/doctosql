@@ -49,6 +49,7 @@ function checkForRevisions(conn: any, tables: any, table: string): Promise<any> 
     const methodName: string = 'checkForRevisions';
     log.trace({ moduleName, methodName, table }, 'start');
     const tableName: any = createTableName(tables, table);
+    const results: any[] = [];
     const sqlStatement: string = `
       select ID,
              REV
@@ -64,29 +65,13 @@ function checkForRevisions(conn: any, tables: any, table: string): Promise<any> 
           return reject(sqlerr);
         } else {
           log.info({ moduleName, methodName, table }, `${rowCount} rows`);
+          results.push({ occurs: rowCount });
+          return resolve({ conn, tables, table, results });
         }
       }
     );
 
     log.trace({ moduleName, methodName, table, tableName, sqlStatement });
-
-    let result: any;
-    const results: any[] = [];
-
-    sqlRequest.on('fields', (columns: any) => {
-      const id: any = columns[0].value;
-      const rev: any = columns[1].value;
-      result = [
-        id,
-        rev
-      ];
-      results.push(result);
-    });
-
-    sqlRequest.on('result', (rowCount: any, more: any, rows: any) => {
-      log.debug({ moduleName, methodName, table, rowCount }, `requestCompleted`);
-      return resolve({ conn, tables, table, results });
-    });
   });
 }
 
@@ -362,20 +347,11 @@ function mergeRow(
           return reject({ sqlerr, table, doc, parentJsonKey });
         } else {
           log.info({ moduleName, methodName, table, id, parentJsonKey }, `${rowCount} rows`);
+          results.push({ occurs: rowCount });
+          return resolve({ conn, tables, table, results });
         }
       }
     );
-
-    sqlRequest.on('fields', (columns: any) => {
-      log.trace({ moduleName, methodName, table, columns }, `row`);
-      result = { occurs: columns[0].value };
-      results.push(result);
-    });
-
-    sqlRequest.on('result', (rowCount: any, more: any, rows: any) => {
-      log.trace({ moduleName, methodName, table, rowCount }, `requestCompleted`);
-      return resolve({ conn, tables, table, doc, parentJsonKey });
-    });
   });
 }
 
