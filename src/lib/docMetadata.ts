@@ -4,10 +4,7 @@
 
 import Logger from 'bunyan';
 import * as changeCase from 'change-case';
-import * as _ from 'lodash';
 import * as moment from 'moment';
-
-import { inspect } from './inspect';
 
 const moduleName: string = 'src/lib/docMetadata.js';
 

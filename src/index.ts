@@ -3,13 +3,14 @@
 /* tslint:disable:no-console */
 
 import * as doc from './lib/docMetadata';
-import { inspect } from './lib/inspect';
 import * as Logger from './lib/Logger';
 import * as ddl from './lib/sqlDDL';
 import * as dml from './lib/sqlDML';
 import * as sql from './lib/sqlMetadata';
 
 const moduleName: string = 'src/index.js';
+
+const DB_TYPE = process.env.DOCTOSQL_DB_TYPE as string || 'sqlserver'
 
 export async function load(entityName: string, docs: any[]): Promise<any> {
   const methodName: string = `load`;
@@ -27,15 +28,15 @@ export async function load(entityName: string, docs: any[]): Promise<any> {
   await sql.initializeLogger(log);
   const tables = sql.analyzeDocumentMetadata(attrs);
 
-  await ddl.initializeLogger(log);
-  const creates = await ddl.createTables(tables);
-  const alters = await ddl.alterTables(tables);
+  await ddl.initializeLogger(DB_TYPE, log);
+  const creates = await ddl.createTables(DB_TYPE, tables);
+  const alters = await ddl.alterTables(DB_TYPE, tables);
 
-  await dml.initializeLogger(log);
+  await dml.initializeLogger(DB_TYPE, log);
 
-  const merges = await dml.mergeDocs(tables, docs);
+  const merges = await dml.mergeDocs(DB_TYPE, tables, docs);
 
-  log.info({ moduleName, methodName }, `Fininshed at ${new Date().toISOString()}.`);
+  log.info({ moduleName, methodName }, `Finished at ${new Date().toISOString()}.`);
 
   return { result: true };
 }
@@ -56,17 +57,17 @@ export async function incr(entityName: string, docs: any[]): Promise<any> {
   await sql.initializeLogger(log);
   const tables = sql.analyzeDocumentMetadata(attrs);
 
-  await ddl.initializeLogger(log);
-  const creates = await ddl.createTables(tables);
-  const alters = await ddl.alterTables(tables);
+  await ddl.initializeLogger(DB_TYPE, log);
+  const creates = await ddl.createTables(DB_TYPE, tables);
+  const alters = await ddl.alterTables(DB_TYPE, tables);
 
-  await dml.initializeLogger(log);
+  await dml.initializeLogger(DB_TYPE, log);
 
-  await dml.initializeRevisions(tables);
+  await dml.initializeRevisions(DB_TYPE, tables);
 
-  const merges = await dml.mergeDocs(tables, docs);
+  const merges = await dml.mergeDocs(DB_TYPE, tables, docs);
 
-  log.info({ moduleName, methodName }, `Fininshed at ${new Date().toISOString()}.`);
+  log.info({ moduleName, methodName }, `Finished at ${new Date().toISOString()}.`);
 
   return { result: true };
 }
