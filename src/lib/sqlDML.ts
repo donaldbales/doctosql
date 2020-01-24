@@ -414,7 +414,7 @@ async function mergeRows(conn: any, tables: any, table: string, doc: any, evente
   const id: string = doc._id || doc.id;
   const rev: string = doc._rev || doc.rev;
   if (revisions.has(id) &&
-     (revisions.get(id) as string) >= rev) {
+     (revisions.get(id) as string) === rev) {
     if (revisionsTable === table) {
       log.info({ moduleName, methodName, table, id }, `no change.`);
     }

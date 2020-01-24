@@ -11,12 +11,12 @@ import * as sql from './lib/sqlMetadata';
 
 const moduleName: string = 'src/index.js';
 
-export async function load(entityName: string, docs: any[]): Promise<any> {
+export async function load(entityName: string, docs: any[], logger: any = null): Promise<any> {
   const methodName: string = `load`;
-  const log: any = Logger.instance.log;
+  const log: any = logger == null ? Logger.instance.log : logger;
   const logLevel: string = (process.env.DOCTOSQL_LOG_LEVEL as string) ||
     (process.env.LOG_LEVEL as string);
-  if (logLevel) {
+  if (log.level && logLevel) {
     log.level(logLevel);
   }
   log.info({ moduleName, methodName }, `Starting at ${new Date().toISOString()}`);
@@ -40,12 +40,12 @@ export async function load(entityName: string, docs: any[]): Promise<any> {
   return { result: true };
 }
 
-export async function incr(entityName: string, docs: any[]): Promise<any> {
+export async function incr(entityName: string, docs: any[], logger: any = null): Promise<any> {
   const methodName: string = `incr`;
-  const log: any = Logger.instance.log;
+  const log: any = logger == null ? Logger.instance.log : logger;
   const logLevel: string = (process.env.DOCTOSQL_LOG_LEVEL as string) ||
     (process.env.LOG_LEVEL as string);
-  if (logLevel) {
+  if (log.level && logLevel) {
     log.level(logLevel);
   }
   log.info({ moduleName, methodName }, `Starting at ${new Date().toISOString()}`);
