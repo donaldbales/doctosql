@@ -3,6 +3,7 @@
 /* tslint:disable:no-console */
 
 import Logger from 'bunyan';
+import * as _ from 'lodash';
 import * as fs from 'fs';
 import * as moment from 'moment';
 import * as path from 'path';
@@ -119,23 +120,44 @@ export function alterTableScript(conn: any, tables: any, table: any): Promise<an
 
 function connect(tables: any, table: any): Promise<any> {
   return new Promise((resolve, reject) => {
-    const rdbms: any = JSON.parse(process.env.DOCTOSQL_RDBMS as string);
+    
+    let rdbms: any;
+    try {
+      // grab the environment variable with the database connection string
+      rdbms = JSON.parse((process.env.DOCTOSQL_RDBMS as string));
+    } catch (e) {
+      log.fatal('DOCTOSQL_RDBMS is not a valid JSON string');
+    }
 
-    const conn = new tds.Connection({
+    if (!_.isPlainObject(rdbms)) {
+      log.fatal('Invalid database connection string.  Check value of DOCTOSQL_RDBMS');
+      // App cannot start without a database, so die
+      process.exit(1);
+    }
+
+    const database: string = rdbms.database;
+    const password: string = rdbms.password;
+    const server: string = rdbms.server;
+    const userName: string = rdbms.userName;
+    const connectTimeout: number = (rdbms.connectTimeout !== undefined) ?
+      Number.parseInt(rdbms.connectTimeout, 10) : 500000; // five minutes
+    const requestTimeout: number = (rdbms.requestTimeout !== undefined) ?
+      Number.parseInt(rdbms.requestTimeout, 10) : 86399997; // almost 24 hours
+
+    const connectionConfig: tds.ConnectionConfig = {
       options: {
-        connectTimeout: 1800000,
-        database: rdbms.database,
+        connectTimeout,
+        database,
+        // If you're on Windows Azure, you will need this:
         encrypt: true,
-        port: rdbms.port || 1433,
-        readOnlyIntent: false,
-        requestTimeout: 1800000,
-        rowCollectionOnRequestCompletion: false,
-        useColumnNames: false
+        requestTimeout
       },
-      password: rdbms.password,
-      server: rdbms.server,
-      userName: rdbms.userName
-    });
+      password,
+      server,
+      userName
+    };
+    
+    const conn = new tds.Connection(connectionConfig);
 
     conn.on('connect', (err) => {
       if (err) {
@@ -147,7 +169,6 @@ function connect(tables: any, table: any): Promise<any> {
 
     conn.on('error', (err) => {
       console.error(err);
-      return reject(err);
     });
   });
 }
