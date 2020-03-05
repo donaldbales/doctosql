@@ -143,20 +143,28 @@ function connect(tables: any, table: any): Promise<any> {
       Number.parseInt(rdbms.connectTimeout, 10) : 500000; // five minutes
     const requestTimeout: number = (rdbms.requestTimeout !== undefined) ?
       Number.parseInt(rdbms.requestTimeout, 10) : 86399997; // almost 24 hours
+    const port: number = (rdbms.port !== undefined) ?
+      Number.parseInt(rdbms.port, 10) : 1433;
 
     const connectionConfig: tds.ConnectionConfig = {
+      authentication: {
+        options: {
+          password,
+          userName
+        },
+        type: 'default',
+      },
       options: {
         connectTimeout,
         database,
         // If you're on Windows Azure, you will need this:
         encrypt: true,
+        port,
         requestTimeout
       },
-      password,
-      server,
-      userName
+      server
     };
-    
+        
     const conn = new tds.Connection(connectionConfig);
 
     conn.on('connect', (err) => {
@@ -216,8 +224,8 @@ function checkForColumn(conn: any, tables: any, table: string, columnName: strin
       results.push(result);
     });
 
-    sqlRequest.on('requestCompleted', (rowCount: any, more: any, rows: any) => {
-      log.trace({ moduleName, methodName, table, rowCount }, `requestCompleted`);
+    sqlRequest.on('requestCompleted', () => {
+      log.trace({ moduleName, methodName, table }, `requestCompleted`);
       return resolve({ conn, tables, table, results });
     });
 
@@ -315,8 +323,8 @@ function checkForTable(conn: any, tables: any, table: string): Promise<any> {
       results.push({ occurs: columns[0].value });
     });
 
-    sqlRequest.on('requestCompleted', (rowCount: any, more: any, rows: any) => {
-      log.trace({ moduleName, methodName, table, rowCount }, `requestCompleted`);
+    sqlRequest.on('requestCompleted', () => {
+      log.trace({ moduleName, methodName, table }, `requestCompleted`);
       return resolve({ conn, tables, table, results });
     });
 
@@ -498,7 +506,7 @@ function executeDDL(conn: any, tables: any, table: any, sql: string): Promise<an
         results.push({ value: columns[0].value });
       });
 
-      sqlRequest.on('requestCompleted', (rowCount: any, more: any, rows: any) => {
+      sqlRequest.on('requestCompleted', () => {
         log.trace({ moduleName, methodName, table, results }, `requestCompleted`);
         return resolve({ conn, tables, table, results });
       });

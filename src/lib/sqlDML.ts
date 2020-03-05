@@ -83,8 +83,8 @@ function checkForRevisions(conn: any, tables: any, table: string): Promise<any> 
       results.push(result);
     });
 
-    sqlRequest.on('requestCompleted', (rowCount: any, more: any, rows: any) => {
-      log.debug({ moduleName, methodName, table, rowCount }, `requestCompleted`);
+    sqlRequest.on('requestCompleted', () => {
+      log.debug({ moduleName, methodName, table }, `requestCompleted`);
       return resolve({ conn, tables, table, results });
     });
 
@@ -125,6 +125,13 @@ export function initializeLogger(loggerLog: Logger): Promise<any> {
       Number.parseInt(rdbms.port, 10) : 1433;
     
     const connectionConfig: tds.ConnectionConfig = {
+      authentication: {
+        options: {
+          password,
+          userName
+        },
+        type: 'default',
+      },
       options: {
         connectTimeout,
         database,
@@ -133,9 +140,7 @@ export function initializeLogger(loggerLog: Logger): Promise<any> {
         port,
         requestTimeout
       },
-      password,
-      server,
-      userName
+      server
     };
     
     // Global instances
@@ -408,8 +413,8 @@ function mergeRow(
       results.push(result);
     });
 
-    sqlRequest.on('requestCompleted', (rowCount: any, more: any, rows: any) => {
-      log.trace({ moduleName, methodName, table, rowCount }, `requestCompleted`);
+    sqlRequest.on('requestCompleted', () => {
+      log.trace({ moduleName, methodName, table }, `requestCompleted`);
       return resolve({ conn, tables, table, doc, parentJsonKey });
     });
 
