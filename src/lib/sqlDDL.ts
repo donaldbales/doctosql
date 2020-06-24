@@ -492,14 +492,14 @@ function executeDDL(conn: any, tables: any, table: any, sql: string): Promise<an
         sql,
         (sqlerr: any, rowCount: any) => {
           if (sqlerr) {
-            log.error({ moduleName, methodName, table, sql, sqlerr});
+            log.error({ moduleName, methodName, table, sql, sqlerr });
             return reject(sqlerr);
           } else {
             log.info({ moduleName, methodName, table, sql }, `${rowCount} rows`);
           }
         });
 
-      log.trace({ moduleName, methodName, table, sql});
+      log.trace({ moduleName, methodName, table, sql });
 
       sqlRequest.on('row', (columns: any) => {
         log.trace({ moduleName, methodName, table, columns }, `row`);

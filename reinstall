@@ -1,0 +1,3 @@
+#!/bin/bash
+
+rm -fv package-lock.json && rm -frv ./node_modules && npm install

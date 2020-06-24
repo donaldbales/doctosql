@@ -1,0 +1,58 @@
+2020-06-23  Tuesday  doctosql
+
+
+TODO LIST
+=========
+
+1. Automated Tests (Done)
+2. Support for MySQL
+3. Support for Oracle
+4. Support for PostgreSQL
+
+BUT FIRST
+=========
+
+Test options
+------------
+
+https://blog.logrocket.com/the-best-unit-testing-frameworks-for-node-js/
+https://stackoverflow.com/questions/4308786/what-is-the-best-testing-framework-to-use-with-node-js
+https://www.softwaretestinghelp.com/node-js-testing-framework/
+https://docs.microsoft.com/en-us/visualstudio/javascript/unit-testing-javascript-with-visual-studio?view=vs-2019
+https://raygun.com/blog/javascript-unit-testing-frameworks/
+https://developer.okta.com/blog/2020/01/27/best-nodejs-testing-tools
+
+AVA - lightweigth, have some experience with it
+Chai - assertion library
+Jasmine - mature, Pivitol Labs
+Jest - Facebook: I want nothing to do with facebook
+Mocha - mature, uses third party tools: chai and sinon
+Sinon.js - mocks library
+
+Others:
+
+Karma
+Nightwatch.js
+NodeUnit
+Should
+Tape
+VowsJS
+Yadda
+jsUnit
+
+
+AVA
+---
+https://www.npmjs.com/package/ava
+https://github.com/avajs/ava
+https://github.com/avajs/typescript
+http://avacasts.com/
+
+Jest
+----
+https://jestjs.io/
+
+
+Mocha
+-----
+https://mochajs.org/

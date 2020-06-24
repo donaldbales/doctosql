@@ -1,0 +1,220 @@
+/* tslint:disable:no-console */
+
+import test from 'ava';
+import * as util from 'util';
+
+import * as dmd from '../../../src/lib/docMetadata';
+import * as Logger from '../../../src/lib/Logger';
+import * as smd from '../../../src/lib/sqlMetadata';
+import * as testDoc from './testDoc.test';
+
+function inspect(obj: any): string {
+  return `${util.inspect(obj, true, 13, false)}`;
+}
+
+test('sqlMetadata - ', async (t) => {
+  t.plan(132);
+
+  let tokens: any;
+  const DELIMITER: string = '\t';
+  const SQL_NAME: number = 0;
+  const SQL_TYPE: number = 1;
+  const DOC_ADDR: number = 2;
+  const DOC_TYPE: number = 3;
+
+  const docs: any[] = [];
+  docs.push(testDoc.doc);
+
+  const log: any = Logger.instance.log;
+
+  await dmd.initializeLogger(log);
+  const json = await dmd.analyzeDocuments('docs', docs);
+  const logs = await smd.initializeLogger(log);
+  const meta = await smd.analyzeDocumentMetadata(json);
+  // console.log(inspect(meta));
+
+  t.truthy(json, 'json has been resolved');
+  t.truthy(logs, 'log has been injected');
+  t.truthy(meta, 'meta has been resolved');
+
+  t.truthy(meta.docs, '');
+  t.true(meta.docs.name === 'docs', '');
+  t.true(meta.docs.table === 'DOCS', '');
+  t.true(meta.docs.tablePk === 'ID', '');
+  t.true(meta.docs.parentName === '', '');
+  t.true(meta.docs.parentTable === '', '');
+  t.true(meta.docs.parentTablePk === '', '');
+  t.truthy(meta.docs.columns, '');
+  tokens = meta.docs.columns[0].split(DELIMITER);
+  t.true(tokens[SQL_NAME].startsWith('A_BOOLEAN'), '');
+  t.true(tokens[SQL_TYPE].startsWith('INT'), '');
+  tokens = meta.docs.columns[1].split(DELIMITER);
+  t.true(tokens[SQL_NAME].startsWith('A_DATE'), '');
+  t.true(tokens[SQL_TYPE].startsWith('DATETIMEOFFSET'), '');
+  tokens = meta.docs.columns[2].split(DELIMITER);
+  t.true(tokens[SQL_NAME].startsWith('A_NUMBER'), '');
+  t.true(tokens[SQL_TYPE].startsWith('VARCHAR'), '');
+  tokens = meta.docs.columns[3].split(DELIMITER);
+  t.true(tokens[SQL_NAME].startsWith('A_STRING'), '');
+  t.true(tokens[SQL_TYPE].startsWith('VARCHAR'), '');
+  tokens = meta.docs.columns[4].split(DELIMITER);
+  t.true(tokens[SQL_NAME].startsWith('ID'), '');
+  tokens = meta.docs.columns[5].split(DELIMITER);
+  t.true(tokens[SQL_NAME].startsWith('REV'), '');
+  t.truthy(meta.docs.fkColumns, '');
+
+  t.true(meta.anObjectWithNoId.name === 'anObjectWithNoId', '');
+  t.true(meta.anObjectWithNoId.table === 'AN_OBJECT_WITH_NO_ID', '');
+  t.true(meta.anObjectWithNoId.tablePk === 'AI', '');
+  t.true(meta.anObjectWithNoId.parentName === 'docs', '');
+  t.true(meta.anObjectWithNoId.parentTable === 'DOCS', '');
+  t.true(meta.anObjectWithNoId.parentTablePk === 'ID', '');
+  t.truthy(meta.anObjectWithNoId.columns, '');
+  tokens = meta.anObjectWithNoId.columns[0].split(DELIMITER);
+  t.true(tokens[SQL_NAME].startsWith('AI'), '');
+  tokens = meta.anObjectWithNoId.columns[1].split(DELIMITER);
+  t.true(tokens[SQL_NAME].startsWith('A_BOOLEAN'), '');
+  t.true(tokens[SQL_TYPE].startsWith('INT'), '');
+  tokens = meta.anObjectWithNoId.columns[2].split(DELIMITER);
+  t.true(tokens[SQL_NAME].startsWith('A_DATE'), '');
+  t.true(tokens[SQL_TYPE].startsWith('DATETIMEOFFSET'), '');
+  tokens = meta.anObjectWithNoId.columns[3].split(DELIMITER);
+  t.true(tokens[SQL_NAME].startsWith('A_NUMBER'), '');
+  t.true(tokens[SQL_TYPE].startsWith('VARCHAR'), '');
+  tokens = meta.anObjectWithNoId.columns[4].split(DELIMITER);
+  t.true(tokens[SQL_NAME].startsWith('A_STRING'), '');
+  t.true(tokens[SQL_TYPE].startsWith('VARCHAR'), '');
+  t.truthy(meta.anObjectWithNoId.fkColumns, '');
+  tokens = meta.anObjectWithNoId.fkColumns[0].split(DELIMITER);
+  t.true(tokens[SQL_NAME].startsWith('DOCS_ID'), '');
+
+  t.true(meta.anObjectWithAnId.name === 'anObjectWithAnId', '');
+  t.true(meta.anObjectWithAnId.table === 'AN_OBJECT_WITH_AN_ID', '');
+  t.true(meta.anObjectWithAnId.tablePk === 'ID', '');
+  t.true(meta.anObjectWithAnId.parentName === 'docs', '');
+  t.true(meta.anObjectWithAnId.parentTable === 'DOCS', '');
+  t.true(meta.anObjectWithAnId.parentTablePk === 'ID', '');
+  t.truthy(meta.anObjectWithAnId.columns, '');
+  tokens = meta.anObjectWithAnId.columns[0].split(DELIMITER);
+  t.true(tokens[SQL_NAME].startsWith('A_BOOLEAN'), '');
+  t.true(tokens[SQL_TYPE].startsWith('INT'), '');
+  tokens = meta.anObjectWithAnId.columns[1].split(DELIMITER);
+  t.true(tokens[SQL_NAME].startsWith('A_DATE'), '');
+  t.true(tokens[SQL_TYPE].startsWith('DATETIMEOFFSET'), '');
+  tokens = meta.anObjectWithAnId.columns[2].split(DELIMITER);
+  t.true(tokens[SQL_NAME].startsWith('A_NUMBER'), '');
+  t.true(tokens[SQL_TYPE].startsWith('VARCHAR'), '');
+  tokens = meta.anObjectWithAnId.columns[3].split(DELIMITER);
+  t.true(tokens[SQL_NAME].startsWith('A_STRING'), '');
+  t.true(tokens[SQL_TYPE].startsWith('VARCHAR'), '');
+  tokens = meta.anObjectWithAnId.columns[4].split(DELIMITER);
+  t.true(tokens[SQL_NAME].startsWith('ID'), '');
+  t.truthy(meta.anObjectWithAnId.fkColumns, '');
+  tokens = meta.anObjectWithAnId.fkColumns[0].split(DELIMITER);
+  t.true(tokens[SQL_NAME].startsWith('DOCS_ID'), '');
+
+  t.true(meta.anObjectWithinAnObject.name === 'anObjectWithinAnObject', '');
+  t.true(meta.anObjectWithinAnObject.table === 'AN_OBJECT_WITHIN_AN_OBJECT', '');
+  t.true(meta.anObjectWithinAnObject.tablePk === 'ID', '');
+  t.true(meta.anObjectWithinAnObject.parentName === 'anObjectWithAnId', '');
+  t.true(meta.anObjectWithinAnObject.parentTable === 'AN_OBJECT_WITH_AN_ID', '');
+  t.true(meta.anObjectWithinAnObject.parentTablePk === 'ID', '');
+  t.truthy(meta.anObjectWithinAnObject.columns, '');
+  tokens = meta.anObjectWithinAnObject.columns[0].split(DELIMITER);
+  t.true(tokens[SQL_NAME].startsWith('A_BOOLEAN'), '');
+  t.true(tokens[SQL_TYPE].startsWith('INT'), '');
+  tokens = meta.anObjectWithinAnObject.columns[1].split(DELIMITER);
+  t.true(tokens[SQL_NAME].startsWith('A_DATE'), '');
+  t.true(tokens[SQL_TYPE].startsWith('DATETIMEOFFSET'), '');
+  tokens = meta.anObjectWithinAnObject.columns[2].split(DELIMITER);
+  t.true(tokens[SQL_NAME].startsWith('A_NUMBER'), '');
+  t.true(tokens[SQL_TYPE].startsWith('VARCHAR'), '');
+  tokens = meta.anObjectWithinAnObject.columns[3].split(DELIMITER);
+  t.true(tokens[SQL_NAME].startsWith('A_STRING'), '');
+  t.true(tokens[SQL_TYPE].startsWith('VARCHAR'), '');
+  tokens = meta.anObjectWithinAnObject.columns[4].split(DELIMITER);
+  t.true(tokens[SQL_NAME].startsWith('ID'), '');
+  t.truthy(meta.anObjectWithinAnObject.fkColumns, '');
+  tokens = meta.anObjectWithinAnObject.fkColumns[0].split(DELIMITER);
+  t.true(tokens[SQL_NAME].startsWith('AN_OBJECT_WITH_AN_ID_ID'), '');
+  tokens = meta.anObjectWithinAnObject.fkColumns[1].split(DELIMITER);
+  t.true(tokens[SQL_NAME].startsWith('DOCS_ID'), '');
+
+  t.true(meta.anArrayWithNoIds.name === 'anArrayWithNoIds', '');
+  t.true(meta.anArrayWithNoIds.table === 'AN_ARRAY_WITH_NO_IDS', '');
+  t.true(meta.anArrayWithNoIds.tablePk === 'AI', '');
+  t.true(meta.anArrayWithNoIds.parentName === 'docs', '');
+  t.true(meta.anArrayWithNoIds.parentTable === 'DOCS', '');
+  t.true(meta.anArrayWithNoIds.parentTablePk === 'ID', '');
+  t.truthy(meta.anArrayWithNoIds.columns, '');
+  tokens = meta.anArrayWithNoIds.columns[0].split(DELIMITER);
+  t.true(tokens[SQL_NAME].startsWith('AI'), '');
+  tokens = meta.anArrayWithNoIds.columns[1].split(DELIMITER);
+  t.true(tokens[SQL_NAME].startsWith('A_BOOLEAN'), '');
+  t.true(tokens[SQL_TYPE].startsWith('INT'), '');
+  tokens = meta.anArrayWithNoIds.columns[2].split(DELIMITER);
+  t.true(tokens[SQL_NAME].startsWith('A_DATE'), '');
+  t.true(tokens[SQL_TYPE].startsWith('DATETIMEOFFSET'), '');
+  tokens = meta.anArrayWithNoIds.columns[3].split(DELIMITER);
+  t.true(tokens[SQL_NAME].startsWith('A_NUMBER'), '');
+  t.true(tokens[SQL_TYPE].startsWith('VARCHAR'), '');
+  tokens = meta.anArrayWithNoIds.columns[4].split(DELIMITER);
+  t.true(tokens[SQL_NAME].startsWith('A_STRING'), '');
+  t.true(tokens[SQL_TYPE].startsWith('VARCHAR'), '');
+  t.truthy(meta.anArrayWithNoIds.fkColumns, '');
+  tokens = meta.anArrayWithNoIds.fkColumns[0].split(DELIMITER);
+  t.true(tokens[SQL_NAME].startsWith('DOCS_ID'), '');
+
+  t.true(meta.anArrayWithIds.name === 'anArrayWithIds', '');
+  t.true(meta.anArrayWithIds.table === 'AN_ARRAY_WITH_IDS', '');
+  t.true(meta.anArrayWithIds.tablePk === 'ID', '');
+  t.true(meta.anArrayWithIds.parentName === 'docs', '');
+  t.true(meta.anArrayWithIds.parentTable === 'DOCS', '');
+  t.true(meta.anArrayWithIds.parentTablePk === 'ID', '');
+  t.truthy(meta.anArrayWithIds.columns, '');
+  tokens = meta.anArrayWithIds.columns[0].split(DELIMITER);
+  t.true(tokens[SQL_NAME].startsWith('A_BOOLEAN'), '');
+  t.true(tokens[SQL_TYPE].startsWith('INT'), '');
+  tokens = meta.anArrayWithIds.columns[1].split(DELIMITER);
+  t.true(tokens[SQL_NAME].startsWith('A_DATE'), '');
+  t.true(tokens[SQL_TYPE].startsWith('DATETIMEOFFSET'), '');
+  tokens = meta.anArrayWithIds.columns[2].split(DELIMITER);
+  t.true(tokens[SQL_NAME].startsWith('A_NUMBER'), '');
+  t.true(tokens[SQL_TYPE].startsWith('VARCHAR'), '');
+  tokens = meta.anArrayWithIds.columns[3].split(DELIMITER);
+  t.true(tokens[SQL_NAME].startsWith('A_STRING'), '');
+  t.true(tokens[SQL_TYPE].startsWith('VARCHAR'), '');
+  tokens = meta.anArrayWithIds.columns[4].split(DELIMITER);
+  t.true(tokens[SQL_NAME].startsWith('ID'), '');
+  t.truthy(meta.anArrayWithIds.fkColumns, '');
+  tokens = meta.anArrayWithIds.fkColumns[0].split(DELIMITER);
+  t.true(tokens[SQL_NAME].startsWith('DOCS_ID'), '');
+
+  t.true(meta.anObjectWithinAnObjectInAnArray.name === 'anObjectWithinAnObjectInAnArray', '');
+  t.true(meta.anObjectWithinAnObjectInAnArray.table === 'AN_OBJECT_WITHIN_AN_OBJECT_IN_AN_ARRAY', '');
+  t.true(meta.anObjectWithinAnObjectInAnArray.tablePk === 'ID', '');
+  t.true(meta.anObjectWithinAnObjectInAnArray.parentName === 'anArrayWithIds', '');
+  t.true(meta.anObjectWithinAnObjectInAnArray.parentTable === 'AN_ARRAY_WITH_IDS', '');
+  t.true(meta.anObjectWithinAnObjectInAnArray.parentTablePk === 'ID', '');
+  t.truthy(meta.anObjectWithinAnObjectInAnArray.columns, '');
+  tokens = meta.anObjectWithinAnObjectInAnArray.columns[0].split(DELIMITER);
+  t.true(tokens[SQL_NAME].startsWith('A_BOOLEAN'), '');
+  t.true(tokens[SQL_TYPE].startsWith('INT'), '');
+  tokens = meta.anObjectWithinAnObjectInAnArray.columns[1].split(DELIMITER);
+  t.true(tokens[SQL_NAME].startsWith('A_DATE'), '');
+  t.true(tokens[SQL_TYPE].startsWith('DATETIMEOFFSET'), '');
+  tokens = meta.anObjectWithinAnObjectInAnArray.columns[2].split(DELIMITER);
+  t.true(tokens[SQL_NAME].startsWith('A_NUMBER'), '');
+  t.true(tokens[SQL_TYPE].startsWith('VARCHAR'), '');
+  tokens = meta.anObjectWithinAnObjectInAnArray.columns[3].split(DELIMITER);
+  t.true(tokens[SQL_NAME].startsWith('A_STRING'), '');
+  t.true(tokens[SQL_TYPE].startsWith('VARCHAR'), '');
+  tokens = meta.anObjectWithinAnObjectInAnArray.columns[4].split(DELIMITER);
+  t.true(tokens[SQL_NAME].startsWith('ID'), '');
+  t.truthy(meta.anObjectWithinAnObjectInAnArray.fkColumns, '');
+  tokens = meta.anObjectWithinAnObjectInAnArray.fkColumns[0].split(DELIMITER);
+  t.true(tokens[SQL_NAME].startsWith('AN_ARRAY_WITH_IDS_ID'), '');
+  tokens = meta.anObjectWithinAnObjectInAnArray.fkColumns[1].split(DELIMITER);
+  t.true(tokens[SQL_NAME].startsWith('DOCS_ID'), '');
+
+});
