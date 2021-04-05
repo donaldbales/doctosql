@@ -10,13 +10,9 @@ import * as sql from './lib/sqlMetadata';
 
 const moduleName: string = 'src/index.js';
 
-<<<<<<< HEAD
-export async function load(entityName: string, docs: any[], logger: any = null): Promise<any> {
-=======
 const DB_TYPE = process.env.DOCTOSQL_DB_TYPE as string || 'sqlserver'
 
-export async function load(entityName: string, docs: any[]): Promise<any> {
->>>>>>> hackathon-2019
+export async function load(entityName: string, docs: any[], logger: any = null): Promise<any> {
   const methodName: string = `load`;
   const log: any = logger == null ? Logger.instance.log : logger;
   const logLevel: string = (process.env.DOCTOSQL_LOG_LEVEL as string) ||
