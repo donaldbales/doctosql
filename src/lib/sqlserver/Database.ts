@@ -2,7 +2,7 @@ import { ConnectionConfig } from 'tedious';
 const ConnectionPool = require('./connection-pool');
 const PooledConnection = require('./connection-pool').PoolConnection;
 
-import { instance as logger } from './Logger';
+import { instance as logger } from '../Logger';
 
 const log = logger.log;
 
