@@ -7,13 +7,14 @@ import * as tds from 'tedious';
 import * as util from 'util';
 import * as uuid from 'uuid';
 
-import Database from '../../../src/lib/Database';
 import * as dmd from '../../../src/lib/docMetadata';
 import * as Logger from '../../../src/lib/Logger';
-import * as ddl from '../../../src/lib/sqlDDL';
 import * as smd from '../../../src/lib/sqlMetadata';
 import * as testDoc from './testDoc.test';
 
+const DOCTOSQL_DB_TYPE: string = (process.env.DOCTOSQL_DB_TYPE as string) || 'sqlserver'
+const Database: any = require(`../../../src/lib/${DOCTOSQL_DB_TYPE}/Database`);
+const ddl: any = require(`../../../src/lib/${DOCTOSQL_DB_TYPE}/sqlDDL`);
 const moduleName: string = 'test/unit/lib/sqlDDL.test';
 
 function inspect(obj: any): string {
@@ -166,7 +167,7 @@ function getKeys(conn: any, like: string): Promise<any> {
 }
 
 let log: any;
-let pool: Database;
+let pool: any;
 test.before('Set up database connections', () => {
   log = Logger.instance.log;
   log.log_level = 'TRACE';
@@ -196,7 +197,7 @@ test.before('Set up database connections', () => {
   const port: number = (rdbms.port !== undefined) ?
     Number.parseInt(rdbms.port, 10) : 1433;
 
-  const connectionConfig: tds.ConnectionConfig = {
+  const connectionConfig: any = {
     authentication: {
       options: {
         password,
