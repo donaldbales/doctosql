@@ -2,14 +2,14 @@
 
 /* tslint:disable:no-console */
 
-const DOCTOSQL_DB_TYPE: string = (process.env.DOCTOSQL_DB_TYPE as string) || 'sqlserver'
+const DOCTOSQL_DATABASE: string = (process.env.DOCTOSQL_DATABASE as string) || 'sqlserver'
 
 import * as doc from './lib/docMetadata';
 import * as Logger from './lib/Logger';
 import * as sql from './lib/sqlMetadata';
 
-const ddl: any = require(`./lib/${DOCTOSQL_DB_TYPE}/sqlDDL`);
-const dml: any = require(`./lib/${DOCTOSQL_DB_TYPE}/sqlDML`);
+const ddl: any = require(`./lib/${DOCTOSQL_DATABASE}/sqlDDL`);
+const dml: any = require(`./lib/${DOCTOSQL_DATABASE}/sqlDML`);
 
 const moduleName: string = 'src/index.js';
 

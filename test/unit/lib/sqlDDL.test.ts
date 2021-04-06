@@ -12,9 +12,9 @@ import * as Logger from '../../../src/lib/Logger';
 import * as smd from '../../../src/lib/sqlMetadata';
 import * as testDoc from './testDoc.test';
 
-const DOCTOSQL_DB_TYPE: string = (process.env.DOCTOSQL_DB_TYPE as string) || 'sqlserver';
-const { Database } = require(`../../../src/lib/${DOCTOSQL_DB_TYPE}/Database`);
-const ddl: any = require(`../../../src/lib/${DOCTOSQL_DB_TYPE}/sqlDDL`);
+const DOCTOSQL_DATABASE: string = (process.env.DOCTOSQL_DATABASE as string) || 'sqlserver';
+const { Database } = require(`../../../src/lib/${DOCTOSQL_DATABASE}/Database`);
+const ddl: any = require(`../../../src/lib/${DOCTOSQL_DATABASE}/sqlDDL`);
 const moduleName: string = 'test/unit/lib/sqlDDL.test';
 
 function inspect(obj: any): string {
