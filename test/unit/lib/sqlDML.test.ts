@@ -557,7 +557,7 @@ test.before('Set up database connections', () => {
   };
 
   // Global instances
-  pool = new Database(connectionConfig);
+  pool = Database.constructor(connectionConfig);
 });
 
 test('sqlDML - ', async (t) => {
