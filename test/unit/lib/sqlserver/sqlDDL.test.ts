@@ -7,15 +7,15 @@ import * as tds from 'tedious';
 import * as util from 'util';
 import * as uuid from 'uuid';
 
-import * as dmd from '../../../src/lib/docMetadata';
-import * as Logger from '../../../src/lib/Logger';
-import * as smd from '../../../src/lib/sqlMetadata';
-import * as testDoc from './testDoc.test';
+import * as dmd from '../../../../src/lib/docMetadata';
+import * as Logger from '../../../../src/lib/Logger';
+import * as smd from '../../../../src/lib/sqlMetadata';
+import * as testDoc from '../testDoc.test';
 
-const DOCTOSQL_DATABASE: string = (process.env.DOCTOSQL_DATABASE as string) || 'sqlserver';
-const { Database } = require(`../../../src/lib/${DOCTOSQL_DATABASE}/Database`);
-const ddl: any = require(`../../../src/lib/${DOCTOSQL_DATABASE}/sqlDDL`);
-const moduleName: string = 'test/unit/lib/sqlDDL.test';
+const DOCTOSQL_DATABASE: string = 'sqlserver';
+const { Database } = require(`../../../../src/lib/${DOCTOSQL_DATABASE}/Database`);
+const ddl: any = require(`../../../../src/lib/${DOCTOSQL_DATABASE}/sqlDDL`);
+const moduleName: string = 'test/unit/lib/sqlserver/sqlDDL.test';
 
 function inspect(obj: any): string {
   return `${util.inspect(obj, true, 13, false)}`;
