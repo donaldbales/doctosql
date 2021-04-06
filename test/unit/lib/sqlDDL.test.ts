@@ -13,7 +13,7 @@ import * as smd from '../../../src/lib/sqlMetadata';
 import * as testDoc from './testDoc.test';
 
 const DOCTOSQL_DB_TYPE: string = (process.env.DOCTOSQL_DB_TYPE as string) || 'sqlserver';
-const Database = require(`../../../src/lib/${DOCTOSQL_DB_TYPE}/Database`);
+const { Database } = require(`../../../src/lib/${DOCTOSQL_DB_TYPE}/Database`);
 const ddl: any = require(`../../../src/lib/${DOCTOSQL_DB_TYPE}/sqlDDL`);
 const moduleName: string = 'test/unit/lib/sqlDDL.test';
 
@@ -215,9 +215,9 @@ test.before('Set up database connections', () => {
     },
     server
   };
-  console.log(connectionConfig);
   // Global instances
-  pool = Database.constructor(connectionConfig);
+  pool = new Database(connectionConfig);
+
   console.log(inspect(pool));
 });
 

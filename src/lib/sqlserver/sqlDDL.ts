@@ -1,13 +1,15 @@
 // sqlServer
 
 /* tslint:disable:no-console */
-
 import Logger from 'bunyan';
+import * as _ from 'lodash';
 import * as fs from 'fs';
 import * as moment from 'moment';
 import * as path from 'path';
+import * as padEnd from 'string.prototype.padend';
 import * as tds from 'tedious';
 
+import { Database } from './Database';
 import { inspect } from '../inspect';
 
 // Sql Server Reserved Words
@@ -117,23 +119,52 @@ export function alterTableScript(conn: any, tables: any, table: any): Promise<an
 
 function connect(tables: any, table: any): Promise<any> {
   return new Promise((resolve, reject) => {
-    const rdbms: any = JSON.parse(process.env.DOCTOSQL_RDBMS as string);
+    
+    let rdbms: any;
+    try {
+      // grab the environment variable with the database connection string
+      rdbms = JSON.parse((process.env.DOCTOSQL_RDBMS as string));
+    } catch (e) {
+      log.fatal('DOCTOSQL_RDBMS is not a valid JSON string');
+    }
 
-    const conn = new tds.Connection({
-      options: {
-        connectTimeout: 1800000,
-        database: rdbms.database,
-        encrypt: true,
-        port: rdbms.port || 1433,
-        readOnlyIntent: false,
-        requestTimeout: 1800000,
-        rowCollectionOnRequestCompletion: false,
-        useColumnNames: false
+    if (!_.isPlainObject(rdbms)) {
+      log.fatal('Invalid database connection string.  Check value of DOCTOSQL_RDBMS');
+      // App cannot start without a database, so die
+      process.exit(1);
+    }
+
+    const database: string = rdbms.database;
+    const password: string = rdbms.password;
+    const server: string = rdbms.server;
+    const userName: string = rdbms.userName;
+    const connectTimeout: number = (rdbms.connectTimeout !== undefined) ?
+      Number.parseInt(rdbms.connectTimeout, 10) : 500000; // five minutes
+    const requestTimeout: number = (rdbms.requestTimeout !== undefined) ?
+      Number.parseInt(rdbms.requestTimeout, 10) : 86399997; // almost 24 hours
+    const port: number = (rdbms.port !== undefined) ?
+      Number.parseInt(rdbms.port, 10) : 1433;
+
+    const connectionConfig: tds.ConnectionConfig = {
+      authentication: {
+        options: {
+          password,
+          userName
+        },
+        type: 'default',
       },
-      password: rdbms.password,
-      server: rdbms.server,
-      userName: rdbms.userName
-    });
+      options: {
+        connectTimeout,
+        database,
+        // If you're on Windows Azure, you will need this:
+        encrypt: true,
+        port,
+        requestTimeout
+      },
+      server
+    };
+        
+    const conn = new tds.Connection(connectionConfig);
 
     conn.on('connect', (err) => {
       if (err) {
@@ -145,7 +176,6 @@ function connect(tables: any, table: any): Promise<any> {
 
     conn.on('error', (err) => {
       console.error(err);
-      return reject(err);
     });
   });
 }
@@ -193,8 +223,8 @@ function checkForColumn(conn: any, tables: any, table: string, columnName: strin
       results.push(result);
     });
 
-    sqlRequest.on('requestCompleted', (rowCount: any, more: any, rows: any) => {
-      log.trace({ moduleName, methodName, table, rowCount }, `requestCompleted`);
+    sqlRequest.on('requestCompleted', () => {
+      log.trace({ moduleName, methodName, table }, `requestCompleted`);
       return resolve({ conn, tables, table, results });
     });
 
@@ -292,8 +322,8 @@ function checkForTable(conn: any, tables: any, table: string): Promise<any> {
       results.push({ occurs: columns[0].value });
     });
 
-    sqlRequest.on('requestCompleted', (rowCount: any, more: any, rows: any) => {
-      log.trace({ moduleName, methodName, table, rowCount }, `requestCompleted`);
+    sqlRequest.on('requestCompleted', () => {
+      log.trace({ moduleName, methodName, table }, `requestCompleted`);
       return resolve({ conn, tables, table, results });
     });
 
@@ -461,21 +491,21 @@ function executeDDL(conn: any, tables: any, table: any, sql: string): Promise<an
         sql,
         (sqlerr: any, rowCount: any) => {
           if (sqlerr) {
-            log.error({ moduleName, methodName, table, sql, sqlerr});
+            log.error({ moduleName, methodName, table, sql, sqlerr });
             return reject(sqlerr);
           } else {
             log.info({ moduleName, methodName, table, sql }, `${rowCount} rows`);
           }
         });
 
-      log.trace({ moduleName, methodName, table, sql});
+      log.trace({ moduleName, methodName, table, sql });
 
       sqlRequest.on('row', (columns: any) => {
         log.trace({ moduleName, methodName, table, columns }, `row`);
         results.push({ value: columns[0].value });
       });
 
-      sqlRequest.on('requestCompleted', (rowCount: any, more: any, rows: any) => {
+      sqlRequest.on('requestCompleted', () => {
         log.trace({ moduleName, methodName, table, results }, `requestCompleted`);
         return resolve({ conn, tables, table, results });
       });

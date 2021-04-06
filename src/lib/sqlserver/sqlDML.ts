@@ -4,10 +4,11 @@
 import Logger from 'bunyan';
 import * as _ from 'lodash';
 import * as moment from 'moment';
+import * as padEnd from 'string.prototype.padend';
 import * as tds from 'tedious';
 
+import { Database } from './Database';
 import { inspect } from '../inspect';
-import Database from './Database';
 import { createTableName } from './sqlDDL';
 
 // Sql Server Reserved Words
@@ -25,7 +26,7 @@ let revisions: Map<string, string> = new Map();
 let revisionsTable: string = '';
 export async function initializeRevisions(tables: any): Promise<any> {
   const methodName: string = 'initializeRevisions';
-  log.trace({ moduleName, methodName }, `start`);
+  log.info({ moduleName, methodName }, `start`);
   let table: string = '';
   for (table in tables) {
     if (!tables[table].parentName) {
@@ -48,7 +49,7 @@ export async function initializeRevisions(tables: any): Promise<any> {
 function checkForRevisions(conn: any, tables: any, table: string): Promise<any> {
   return new Promise((resolve, reject) => {
     const methodName: string = 'checkForRevisions';
-    log.trace({ moduleName, methodName, table }, 'start');
+    log.info({ moduleName, methodName, table }, 'start');
     const tableName: any = createTableName(tables, table);
     const sqlStatement: string = `
       select ID,
@@ -82,8 +83,8 @@ function checkForRevisions(conn: any, tables: any, table: string): Promise<any> 
       results.push(result);
     });
 
-    sqlRequest.on('requestCompleted', (rowCount: any, more: any, rows: any) => {
-      log.debug({ moduleName, methodName, table, rowCount }, `requestCompleted`);
+    sqlRequest.on('requestCompleted', () => {
+      log.debug({ moduleName, methodName, table }, `requestCompleted`);
       return resolve({ conn, tables, table, results });
     });
 
@@ -98,39 +99,55 @@ export function initializeLogger(loggerLog: Logger): Promise<any> {
 
     // for now, throw connection pool in here.
 
-    let connection: any;
+    let rdbms: any;
     try {
       // grab the environment variable with the database connection string
-      connection = JSON.parse((process.env.DOCTOSQL_RDBMS as string));
+      rdbms = JSON.parse((process.env.DOCTOSQL_RDBMS as string));
     } catch (e) {
       log.fatal('DOCTOSQL_RDBMS is not a valid JSON string');
     }
 
-    if (!_.isPlainObject(connection)) {
+    if (!_.isPlainObject(rdbms)) {
       log.fatal('Invalid database connection string.  Check value of DOCTOSQL_RDBMS');
       // App cannot start without a database, so die
       process.exit(1);
     }
 
-    const thirtyMinutes: number = 30 * 60 * 1000;
-    // Global instances
-    pool = new Database({
-      options: {
-        connectTimeout: thirtyMinutes,
-        database: connection.database,
-        encrypt: true,
-        port: connection.port || 1433,
-        readOnlyIntent: false,
-        requestTimeout: thirtyMinutes,
-        rowCollectionOnRequestCompletion: false,
-        useColumnNames: false
+    const database: string = rdbms.database;
+    const password: string = rdbms.password;
+    const server: string = rdbms.server;
+    const userName: string = rdbms.userName;
+    const connectTimeout: number = (rdbms.connectTimeout !== undefined) ?
+      Number.parseInt(rdbms.connectTimeout, 10) : 500000; // five minutes
+    const requestTimeout: number = (rdbms.requestTimeout !== undefined) ?
+      Number.parseInt(rdbms.requestTimeout, 10) : 86399997; // almost 24 hours
+    const port: number = (rdbms.port !== undefined) ?
+      Number.parseInt(rdbms.port, 10) : 1433;
+    
+    const connectionConfig: tds.ConnectionConfig = {
+      authentication: {
+        options: {
+          password,
+          userName
+        },
+        type: 'default',
       },
-      password: connection.password,
-      server: connection.server,
-      userName: connection.userName
-    });
+      options: {
+        connectTimeout,
+        database,
+        // If you're on Windows Azure, you will need this:
+        encrypt: true,
+        port,
+        requestTimeout
+      },
+      server
+    };
+    
+    // Global instances
+    pool = new Database(connectionConfig);
 
     log.trace({ moduleName, methodName }, `logger set up!`);
+
     resolve(true);
   });
 }
@@ -396,8 +413,8 @@ function mergeRow(
       results.push(result);
     });
 
-    sqlRequest.on('requestCompleted', (rowCount: any, more: any, rows: any) => {
-      log.trace({ moduleName, methodName, table, rowCount }, `requestCompleted`);
+    sqlRequest.on('requestCompleted', () => {
+      log.trace({ moduleName, methodName, table }, `requestCompleted`);
       return resolve({ conn, tables, table, doc, parentJsonKey });
     });
 
@@ -410,10 +427,10 @@ async function mergeRows(conn: any, tables: any, table: string, doc: any, evente
   log.trace({ moduleName, methodName, table }, `start`);
 
   // Check the id and revision
-  const id: string = doc._id || doc.id;
-  const rev: string = doc._rev || doc.rev;
+  const id: string = (doc._id as string) || (doc.id as string);
+  const rev: string = (doc._rev as string) || (doc.rev as string);
   if (revisions.has(id) &&
-     (revisions.get(id) as string) >= rev) {
+     (revisions.get(id) as string) == rev) {
     if (revisionsTable === table) {
       log.info({ moduleName, methodName, table, id }, `no change.`);
     }
